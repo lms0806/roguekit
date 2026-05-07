@@ -1,5 +1,6 @@
 use crate::prelude::{HSV, RGB, RGBA};
 
+#[allow(clippy::missing_panics_doc)]
 pub fn assert_approx_eq(left: f32, right: f32) {
     assert!((left - right).abs() < 1e-6);
 }

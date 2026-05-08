@@ -34,7 +34,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
       - name: Build project
         if: ${{ env.SONAR_TOKEN != '' }}
-        run: cargo build --all-features
+        run: cargo build
       - name: Generate coverage report
         if: ${{ env.SONAR_TOKEN != '' }}
         run: cargo tarpaulin --out Lcov --output-dir coverage

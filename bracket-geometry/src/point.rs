@@ -54,8 +54,9 @@ impl Point {
         Point { x: 0, y: 0 }
     }
 
+    /// Create a point from an x/y tuple.
     #[inline]
-    /// Create a point from a tuple of two i32s
+    #[must_use]
     pub fn from_tuple<T>(t: (T, T)) -> Self
     where
         T: TryInto<i32>,
@@ -63,12 +64,12 @@ impl Point {
         Point::new(t.0, t.1)
     }
 
-    #[inline]
     /// Helper for map index conversion
     ///
     /// # Panics
     ///
     /// This can panic if X or Y are not convertible to a `usize`, or if width is not convertible to a `usize`.
+    #[inline]
     #[must_use]
     pub fn to_index<T>(self, width: T) -> usize
     where
@@ -280,6 +281,7 @@ impl ops::Div<f32> for Point {
     }
 }
 
+// Support AddAssign for Point
 impl ops::AddAssign for Point {
     fn add_assign(&mut self, other: Self) {
         *self = Self {
@@ -289,6 +291,7 @@ impl ops::AddAssign for Point {
     }
 }
 
+// Support SubAssign for Point
 impl ops::SubAssign for Point {
     fn sub_assign(&mut self, other: Self) {
         *self = Self {
@@ -298,6 +301,7 @@ impl ops::SubAssign for Point {
     }
 }
 
+// Support MulAssign for Point
 impl ops::MulAssign for Point {
     fn mul_assign(&mut self, other: Self) {
         *self = Self {
@@ -307,6 +311,7 @@ impl ops::MulAssign for Point {
     }
 }
 
+// Support DivAssign for Point
 impl ops::DivAssign for Point {
     fn div_assign(&mut self, other: Self) {
         *self = Self {

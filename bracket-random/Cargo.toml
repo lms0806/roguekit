@@ -4,11 +4,11 @@ version = "0.8.7"
 authors = ["Herbert Wolverson <herberticus@gmail.com>"]
 edition = "2021"
 publish = true
-description = "Random number generator (xorshift based), focused on dice rolling. Optionally includes parsing of RPG-style dice strings (e.g. \"3d6+12\"). Part of the bracket-lib family."
+description = "Random number generator (ChaCha based), focused on dice rolling. Optionally includes parsing of RPG-style dice strings (e.g. \"3d6+12\"). Part of the bracket-lib family."
 homepage = "https://github.com/thebracket/bracket-lib"
 repository = "https://github.com/thebracket/bracket-lib"
 readme = "README.md"
-keywords = ["roguelike", "gamedev", "random", "xorshift", "dice"]
+keywords = ["roguelike", "gamedev", "random", "chacha", "dice"]
 categories = ["game-engines", "random"]
 license = "MIT"
 

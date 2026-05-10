@@ -25,8 +25,7 @@ serde_crate = { version = "~1.0.110", features = ["derive"], optional = true, pa
 rand = { version = "0.8", default-features = false, features = [ "getrandom" ] }
 
 [target.wasm32-unknown-unknown.dependencies]
-js-sys = "0.3.48"
-wasm-bindgen = "0.2"
+getrandom = { version = "0.2.2", features = [ "js" ] }
 
 [dev-dependencies]
 criterion = "~0.4"

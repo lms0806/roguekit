@@ -1,6 +1,6 @@
 #[cfg(feature = "parsing")]
 use crate::prelude::{parse_dice_string, DiceParseError, DiceType};
-use rand::{rngs::OsRng, Rng, RngCore, SeedableRng};
+use rand::{rngs::SysRng, Rng, RngExt, SeedableRng};
 use rand_chacha::ChaCha12Rng;
 
 #[cfg(feature = "serde")]
@@ -20,7 +20,8 @@ impl RandomNumberGenerator {
     /// Creates a new RNG from a randomly generated seed
     #[allow(clippy::new_without_default)] // ChaCha12Rng doesn't have a Default, so we don't either
     pub fn new() -> RandomNumberGenerator {
-        let rng = ChaCha12Rng::from_rng(OsRng).expect("failed to seed ChaCha12Rng from OS RNG");
+        let rng = ChaCha12Rng::try_from_rng(&mut SysRng)
+            .expect("failed to seed ChaCha12Rng from system RNG");
         RandomNumberGenerator { rng }
     }
 
@@ -33,9 +34,9 @@ impl RandomNumberGenerator {
     /// Returns a random value of whatever type you specify
     pub fn rand<T>(&mut self) -> T
     where
-        rand::distributions::Standard: rand::distributions::Distribution<T>,
+        rand::distr::StandardUniform: rand::distr::Distribution<T>,
     {
-        self.rng.gen::<T>()
+        self.rng.random::<T>()
     }
 
     /// Returns a random value in the specified range, of type specified at the call site.
@@ -43,9 +44,9 @@ impl RandomNumberGenerator {
     /// So range(1,6) will give you numbers from 1 to 5.
     pub fn range<T>(&mut self, min: T, max: T) -> T
     where
-        T: rand::distributions::uniform::SampleUniform + PartialOrd,
+        T: rand::distr::uniform::SampleUniform + PartialOrd,
     {
-        self.rng.gen_range(min..max)
+        self.rng.random_range(min..max)
     }
 
     /// Rolls dice, using the classic 3d6 type of format: n is the number of dice, die_type is the size of the dice.
@@ -103,7 +104,7 @@ impl RandomNumberGenerator {
 
     /// Get underlying RNG implementation for use in traits / algorithms exposed by
     /// other crates (eg. `rand` itself)
-    pub fn get_rng(&mut self) -> &mut impl RngCore {
+    pub fn get_rng(&mut self) -> &mut impl Rng {
         &mut self.rng
     }
 }
@@ -111,7 +112,7 @@ impl RandomNumberGenerator {
 #[cfg(test)]
 mod tests {
     use crate::prelude::RandomNumberGenerator;
-    use rand::RngCore;
+    use rand::Rng;
 
     #[cfg(feature = "parsing")]
     #[test]
@@ -196,7 +197,7 @@ mod tests {
     }
 
     #[test]
-    fn get_rng_exposes_rng_core() {
+    fn get_rng_exposes_rng() {
         let mut rng1 = RandomNumberGenerator::seeded(1000);
         let mut rng2 = RandomNumberGenerator::seeded(1000);
         assert_eq!(rng1.next_u64(), rng2.get_rng().next_u64());

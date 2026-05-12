@@ -46,7 +46,7 @@ pub mod rgba;
 pub mod xpcolor;
 
 #[cfg(test)]
-pub mod test_utils;
+mod test_utils;
 
 /// Exports the color functions/types in the `prelude` namespace.
 pub mod prelude {

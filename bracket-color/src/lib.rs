@@ -42,6 +42,11 @@ pub mod palette;
 pub mod rgb;
 /// Import RGBA color support
 pub mod rgba;
+/// Import color wrapper for transportation support
+pub mod xpcolor;
+
+#[cfg(test)]
+mod test_utils;
 
 /// Exports the color functions/types in the `prelude` namespace.
 pub mod prelude {
@@ -53,4 +58,5 @@ pub mod prelude {
     pub use crate::palette::*;
     pub use crate::rgb::*;
     pub use crate::rgba::*;
+    pub use crate::xpcolor::*;
 }

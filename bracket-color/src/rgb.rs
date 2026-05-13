@@ -1,4 +1,4 @@
-use crate::prelude::{HSV, RGBA};
+use crate::prelude::{XpColor, HSV, RGBA};
 use std::convert::From;
 use std::ops;
 
@@ -298,6 +298,12 @@ impl RGB {
         })
     }
 
+    #[inline]
+    #[must_use]
+    pub fn from_xp(xp: XpColor) -> Self {
+        Self::from_u8(xp.r, xp.g, xp.b)
+    }
+
     /// Converts an RGB triple to an HSV triple.
     #[allow(clippy::many_single_char_names)]
     #[must_use]
@@ -341,6 +347,17 @@ impl RGB {
     #[must_use]
     pub fn to_rgba(&self, alpha: f32) -> RGBA {
         RGBA::from_f32(self.r, self.g, self.b, alpha)
+    }
+
+    #[inline]
+    #[must_use]
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    pub fn to_xp(&self) -> XpColor {
+        XpColor::new(
+            (self.r.clamp(0.0, 1.0) * 255.0) as u8,
+            (self.g.clamp(0.0, 1.0) * 255.0) as u8,
+            (self.b.clamp(0.0, 1.0) * 255.0) as u8,
+        )
     }
 
     /// Applies a quick grayscale conversion to the color
@@ -451,6 +468,8 @@ mod crossterm_features {
 #[cfg(test)]
 mod tests {
     use crate::prelude::*;
+    use crate::test_utils::*;
+    use rstest::rstest;
 
     #[test]
     // Tests that we make an RGB triplet at defaults and it is black.
@@ -462,49 +481,88 @@ mod tests {
     }
 
     #[test]
-    // Tests that we make an HSV triplet at defaults and it is black.
-    fn convert_olive_to_rgb() {
-        let grey = HSV::from_f32(60.0 / 360.0, 1.0, 0.501_960_8);
-        let rgb = grey.to_rgb();
-        assert!(f32::abs(rgb.r - 128.0 / 255.0) < f32::EPSILON);
-        assert!(f32::abs(rgb.g - 128.0 / 255.0) < f32::EPSILON);
-        assert!(rgb.b < f32::EPSILON);
+    fn new_rgb_is_black() {
+        assert_rgb_eq(RGB::new(), 0.0, 0.0, 0.0);
+    }
+
+    #[rstest]
+    #[case(RGB::from_f32(1.0, 0.0, 0.0), 0.0, 1.0, 1.0)]
+    #[case(RGB::from_f32(0.0, 1.0, 0.0), 120.0 / 360.0, 1.0, 1.0)]
+    #[case(RGB::from_f32(0.0, 0.0, 1.0), 240.0 / 360.0, 1.0, 1.0)]
+    fn convert_primary_colors_to_hsv(
+        #[case] rgb: RGB,
+        #[case] h: f32,
+        #[case] s: f32,
+        #[case] v: f32,
+    ) {
+        assert_hsv_eq(rgb.to_hsv(), h, s, v);
+    }
+
+    #[rstest]
+    #[case(RGB::from_f32(0.0, 0.0, 0.0), 0.0, 0.0, 0.0)]
+    #[case(RGB::from_f32(1.0, 1.0, 1.0), 0.0, 0.0, 1.0)]
+    #[case(RGB::from_f32(0.5, 0.5, 0.5), 0.0, 0.0, 0.5)]
+    fn convert_grayscale_to_hsv(#[case] rgb: RGB, #[case] h: f32, #[case] s: f32, #[case] v: f32) {
+        assert_hsv_eq(rgb.to_hsv(), h, s, v);
     }
 
     #[test]
-    // Tests that we make an HSV triplet at defaults and it is black.
-    fn test_red_hex() {
-        let rgb = RGB::from_hex("#FF0000").expect("Invalid hex string");
-        assert!(f32::abs(rgb.r - 1.0) < f32::EPSILON);
-        assert!(rgb.g < f32::EPSILON);
-        assert!(rgb.b < f32::EPSILON);
+    fn convert_olive_to_hsv() {
+        let rgb = RGB::from_u8(128, 128, 0);
+        let hsv = rgb.to_hsv();
+
+        assert_hsv_eq(hsv, 60.0 / 360.0, 1.0, 128.0 / 255.0);
     }
 
     #[test]
-    // Tests that we make an HSV triplet at defaults and it is black.
-    fn test_green_hex() {
-        let rgb = RGB::from_hex("#00FF00").expect("Invalid hex string");
-        assert!(rgb.r < f32::EPSILON);
-        assert!(f32::abs(rgb.g - 1.0) < f32::EPSILON);
-        assert!(rgb.b < f32::EPSILON);
+    fn convert_rgb_to_rgba_preserves_rgb_and_sets_alpha() {
+        let rgba = RGB::from_f32(1.0, 0.0, 0.0).to_rgba(0.5);
+
+        assert_approx_eq(rgba.r, 1.0);
+        assert_approx_eq(rgba.g, 0.0);
+        assert_approx_eq(rgba.b, 0.0);
+        assert_approx_eq(rgba.a, 0.5);
+    }
+
+    #[rstest]
+    #[case("#FF0000", 1.0, 0.0, 0.0)]
+    #[case("#00FF00", 0.0, 1.0, 0.0)]
+    #[case("#0000FF", 0.0, 0.0, 1.0)]
+    #[case("#808000", 128.0 / 255.0, 128.0 / 255.0, 0.0)]
+    fn parse_hex_colors(#[case] hex: &str, #[case] r: f32, #[case] g: f32, #[case] b: f32) {
+        let rgb = RGB::from_hex(hex).expect("valid hex color");
+        assert_rgb_eq(rgb, r, g, b);
     }
 
     #[test]
-    // Tests that we make an HSV triplet at defaults and it is black.
-    fn test_blue_hex() {
-        let rgb = RGB::from_hex("#0000FF").expect("Invalid hex string");
-        assert!(rgb.r < f32::EPSILON);
-        assert!(rgb.g < f32::EPSILON);
-        assert!(f32::abs(rgb.b - 1.0) < f32::EPSILON);
+    fn parse_hex_rejects_missing_hash() {
+        let err = RGB::from_hex("FF0000").unwrap_err();
+        assert_eq!(err, HtmlColorConversionError::MissingHash);
+    }
+
+    #[rstest]
+    #[case("")]
+    #[case("#FFF")]
+    #[case("#FFFF")]
+    #[case("#FFFFFF00")]
+    fn parse_hex_rejects_invalid_length(#[case] hex: &str) {
+        let err = RGB::from_hex(hex).unwrap_err();
+        assert_eq!(err, HtmlColorConversionError::InvalidStringLength);
     }
 
     #[test]
-    // Tests that we make an HSV triplet at defaults and it is black.
+    fn parse_hex_rejects_invalid_character() {
+        let err = RGB::from_hex("#GG0000").unwrap_err();
+        assert_eq!(err, HtmlColorConversionError::InvalidCharacter);
+    }
+
+    #[test]
     fn test_blue_named() {
         let rgb = RGB::named(BLUE);
-        assert!(rgb.r < f32::EPSILON);
-        assert!(rgb.g < f32::EPSILON);
-        assert!(f32::abs(rgb.b - 1.0) < f32::EPSILON);
+
+        assert_approx_eq(rgb.r, 0.0);
+        assert_approx_eq(rgb.g, 0.0);
+        assert_approx_eq(rgb.b, 1.0);
     }
 
     #[test]

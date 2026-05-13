@@ -149,6 +149,8 @@ impl HSV {
 #[cfg(test)]
 mod tests {
     use crate::prelude::*;
+    use crate::test_utils::*;
+    use rstest::rstest;
 
     #[test]
     // Tests that we make an HSV triplet at defaults and it is black.
@@ -160,43 +162,55 @@ mod tests {
     }
 
     #[test]
-    // Tests that we make an HSV triplet at defaults and it is black.
-    fn convert_red_to_hsv() {
-        let red = RGB::from_f32(1.0, 0.0, 0.0);
-        let hsv = red.to_hsv();
-        assert!(hsv.h < f32::EPSILON);
-        assert!(f32::abs(hsv.s - 1.0) < f32::EPSILON);
-        assert!(f32::abs(hsv.v - 1.0) < f32::EPSILON);
+    fn construct_hsv_from_f32() {
+        let hsv = HSV::from_f32(0.5, 0.25, 0.75);
+        assert_hsv_eq(hsv, 0.5, 0.25, 0.75);
+    }
+
+    #[rstest]
+    #[case(HSV::from_f32(0.0, 1.0, 1.0), 1.0, 0.0, 0.0)]
+    #[case(HSV::from_f32(120.0 / 360.0, 1.0, 1.0), 0.0, 1.0, 0.0)]
+    #[case(HSV::from_f32(240.0 / 360.0, 1.0, 1.0), 0.0, 0.0, 1.0)]
+    fn convert_hsv_to_rgb_primary_colors(
+        #[case] hsv: HSV,
+        #[case] r: f32,
+        #[case] g: f32,
+        #[case] b: f32,
+    ) {
+        assert_rgb_eq(hsv.to_rgb(), r, g, b);
+    }
+
+    #[rstest]
+    #[case(0.0)]
+    #[case(0.5)]
+    #[case(1.0)]
+    fn convert_hsv_to_rgba_preserves_alpha(#[case] alpha: f32) {
+        let hsv = HSV::from_f32(0.0, 1.0, 1.0);
+        let rgba = hsv.to_rgba(alpha);
+
+        assert_rgba_eq(rgba, 1.0, 0.0, 0.0, alpha);
+    }
+
+    #[rstest]
+    #[case(HSV::from_f32(0.0, 0.0, 0.0), 0.0, 0.0, 0.0)]
+    #[case(HSV::from_f32(0.0, 0.0, 1.0), 1.0, 1.0, 1.0)]
+    #[case(HSV::from_f32(0.0, 0.0, 0.5), 0.5, 0.5, 0.5)]
+    fn convert_hsv_grayscale_to_rgb(
+        #[case] hsv: HSV,
+        #[case] r: f32,
+        #[case] g: f32,
+        #[case] b: f32,
+    ) {
+        assert_rgb_eq(hsv.to_rgb(), r, g, b);
     }
 
     #[test]
-    // Tests that we make an HSV triplet at defaults and it is black.
-    fn convert_green_to_hsv() {
-        let green = RGB::from_f32(0.0, 1.0, 0.0);
-        let hsv = green.to_hsv();
-        assert!(f32::abs(hsv.h - 120.0 / 360.0) < f32::EPSILON);
-        assert!(f32::abs(hsv.s - 1.0) < f32::EPSILON);
-        assert!(f32::abs(hsv.v - 1.0) < f32::EPSILON);
-    }
+    fn from_rgb_and_rgba_delegate_to_hsv_conversion() {
+        let rgb = RGB::from_f32(1.0, 0.0, 0.0);
+        let rgba = RGBA::from_f32(1.0, 0.0, 0.0, 0.5);
 
-    #[test]
-    // Tests that we make an HSV triplet at defaults and it is black.
-    fn convert_blue_to_hsv() {
-        let blue = RGB::from_f32(0.0, 0.0, 1.0);
-        let hsv = blue.to_hsv();
-        assert!(f32::abs(hsv.h - 240.0 / 360.0) < f32::EPSILON);
-        assert!(f32::abs(hsv.s - 1.0) < f32::EPSILON);
-        assert!(f32::abs(hsv.v - 1.0) < f32::EPSILON);
-    }
-
-    #[test]
-    // Tests that we make an HSV triplet at defaults and it is black.
-    fn convert_olive_to_hsv() {
-        let grey = RGB::from_u8(128, 128, 0);
-        let hsv = grey.to_hsv();
-        assert!(f32::abs(hsv.h - 60.0 / 360.0) < f32::EPSILON);
-        assert!(f32::abs(hsv.s - 1.0) < f32::EPSILON);
-        assert!(f32::abs(hsv.v - 0.5019_608) < f32::EPSILON);
+        assert_hsv_eq(HSV::from(rgb), 0.0, 1.0, 1.0);
+        assert_hsv_eq(HSV::from(rgba), 0.0, 1.0, 1.0);
     }
 
     #[test]

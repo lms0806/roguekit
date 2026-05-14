@@ -486,6 +486,20 @@ mod tests {
     }
 
     #[rstest]
+    #[case(RGB::from_f32(-1.0, 0.5, 2.0), 0.0, 0.5, 1.0)]
+    #[case(RGB::from_u8(255, 128, 0), 1.0, 128.0 / 255.0, 0.0)]
+    #[case(RGB::from((64, 128, 255)), 64.0 / 255.0, 128.0 / 255.0, 1.0)]
+    #[case(RGB::from(RGBA::from_f32(0.25, 0.5, 0.75, 0.125)), 0.25, 0.5, 0.75)]
+    fn construction_and_conversion_set_expected_components(
+        #[case] rgb: RGB,
+        #[case] r: f32,
+        #[case] g: f32,
+        #[case] b: f32,
+    ) {
+        assert_rgb_eq(rgb, r, g, b);
+    }
+
+    #[rstest]
     #[case(RGB::from_f32(1.0, 0.0, 0.0), 0.0, 1.0, 1.0)]
     #[case(RGB::from_f32(0.0, 1.0, 0.0), 120.0 / 360.0, 1.0, 1.0)]
     #[case(RGB::from_f32(0.0, 0.0, 1.0), 240.0 / 360.0, 1.0, 1.0)]
@@ -514,14 +528,40 @@ mod tests {
         assert_hsv_eq(hsv, 60.0 / 360.0, 1.0, 128.0 / 255.0);
     }
 
-    #[test]
-    fn convert_rgb_to_rgba_preserves_rgb_and_sets_alpha() {
-        let rgba = RGB::from_f32(1.0, 0.0, 0.0).to_rgba(0.5);
+    #[rstest]
+    #[case(0.0)]
+    #[case(0.5)]
+    #[case(1.0)]
+    fn convert_rgb_to_rgba_preserves_rgb_and_sets_alpha(#[case] alpha: f32) {
+        let rgba = RGB::from_f32(1.0, 0.0, 0.0).to_rgba(alpha);
 
-        assert_approx_eq(rgba.r, 1.0);
-        assert_approx_eq(rgba.g, 0.0);
-        assert_approx_eq(rgba.b, 0.0);
-        assert_approx_eq(rgba.a, 0.5);
+        assert_rgba_eq(rgba, 1.0, 0.0, 0.0, alpha);
+    }
+
+    #[test]
+    fn xp_color_round_trip_preserves_bytes() {
+        let xp = XpColor::new(17, 128, 255);
+        let rgb = RGB::from_xp(xp);
+        assert_rgb_eq(rgb, 17.0 / 255.0, 128.0 / 255.0, 1.0);
+
+        let converted = rgb.to_xp();
+        assert_eq!(converted.r, 17);
+        assert_eq!(converted.g, 128);
+        assert_eq!(converted.b, 255);
+    }
+
+    #[test]
+    fn to_xp_clamps_out_of_range_components() {
+        let rgb = RGB {
+            r: -0.5,
+            g: 0.5,
+            b: 1.5,
+        };
+        let xp = rgb.to_xp();
+
+        assert_eq!(xp.r, 0);
+        assert_eq!(xp.g, 127);
+        assert_eq!(xp.b, 255);
     }
 
     #[rstest]
@@ -560,9 +600,7 @@ mod tests {
     fn test_blue_named() {
         let rgb = RGB::named(BLUE);
 
-        assert_approx_eq(rgb.r, 0.0);
-        assert_approx_eq(rgb.g, 0.0);
-        assert_approx_eq(rgb.b, 1.0);
+        assert_rgb_eq(rgb, 0.0, 0.0, 1.0);
     }
 
     #[test]

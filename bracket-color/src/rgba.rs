@@ -527,6 +527,41 @@ mod tests {
     }
 
     #[rstest]
+    #[case(RGBA::from_f32(0.25, 0.5, 0.75, 0.5) + 0.125, 0.375, 0.625, 0.875, 0.625)]
+    #[case(
+        RGBA::from_f32(0.25, 0.5, 0.75, 0.5) + RGBA::from_f32(0.125, 0.25, 0.125, 0.25),
+        0.375,
+        0.75,
+        0.875,
+        0.75
+    )]
+    #[case(RGBA::from_f32(0.25, 0.5, 0.75, 0.5) - 0.125, 0.125, 0.375, 0.625, 0.375)]
+    #[case(
+        RGBA::from_f32(0.25, 0.5, 0.75, 0.5) - RGBA::from_f32(0.125, 0.25, 0.125, 0.25),
+        0.125,
+        0.25,
+        0.625,
+        0.25
+    )]
+    #[case(RGBA::from_f32(0.25, 0.5, 0.75, 0.5) * 0.5, 0.125, 0.25, 0.375, 0.25)]
+    #[case(
+        RGBA::from_f32(0.25, 0.5, 0.75, 0.5) * RGBA::from_f32(0.125, 0.25, 0.125, 0.25),
+        0.03125,
+        0.125,
+        0.09375,
+        0.125
+    )]
+    fn arithmetic_operators_apply_component_wise(
+        #[case] rgba: RGBA,
+        #[case] r: f32,
+        #[case] g: f32,
+        #[case] b: f32,
+        #[case] a: f32,
+    ) {
+        assert_rgba_eq(rgba, r, g, b, a);
+    }
+
+    #[rstest]
     #[case("#FF0000FF", 1.0, 0.0, 0.0, 1.0)]
     #[case("#00FF00FF", 0.0, 1.0, 0.0, 1.0)]
     #[case("#0000FFFF", 0.0, 0.0, 1.0, 1.0)]
@@ -602,6 +637,8 @@ mod tests {
         let white = RGBA::named(WHITE);
         assert!(black.lerp(white, 0.0) == black);
         assert!(black.lerp(white, 1.0) == white);
+
+        assert_rgba_eq(black.lerp(white, 0.5), 0.5, 0.5, 0.5, 1.0);
     }
 
     #[test]
@@ -613,10 +650,7 @@ mod tests {
         let l0 = black.lerp_alpha(white, 0.0);
         let l1 = black.lerp_alpha(white, 1.0);
 
-        assert!(l0.a < f32::EPSILON);
-        assert!((l1.a - 1.0).abs() < f32::EPSILON);
-
-        assert!(l0.to_rgb() == RGB::named(BLACK));
-        assert!(l1.to_rgb() == RGB::named(BLACK));
+        assert_rgba_eq(l0, 0.0, 0.0, 0.0, 0.0);
+        assert_rgba_eq(l1, 0.0, 0.0, 0.0, 1.0);
     }
 }

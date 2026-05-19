@@ -149,6 +149,7 @@ impl DijkstraMap {
         let mut open_list: VecDeque<(usize, f32)> = VecDeque::with_capacity(mapsize);
 
         for start in starts {
+            dm.map[*start] = f32::min(dm.map[*start], 0.0);
             open_list.push_back((*start, 0.0));
         }
 
@@ -180,6 +181,7 @@ impl DijkstraMap {
         let mut open_list: VecDeque<(usize, f32)> = VecDeque::with_capacity(mapsize);
 
         for start in starts {
+            dm.map[start.0] = f32::min(dm.map[start.0], start.1);
             open_list.push_back(*start);
         }
 
@@ -226,6 +228,7 @@ impl DijkstraMap {
             let mut open_list: VecDeque<(usize, f32)> = VecDeque::with_capacity(mapsize);
 
             for start in l.starts.iter().copied() {
+                l.map[start] = f32::min(l.map[start], 0.0);
                 open_list.push_back((start, 0.0));
             }
 

@@ -9,7 +9,7 @@ mod hal;
 mod initializer;
 mod input;
 pub mod rex;
-pub use bracket_embedding::prelude::{embedded_resource, link_resource, EMBED};
+pub use bracket_embedding::prelude::{EMBED, embedded_resource, link_resource};
 
 pub type BResult<T> = anyhow::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 pub(crate) use input::clear_input_state;

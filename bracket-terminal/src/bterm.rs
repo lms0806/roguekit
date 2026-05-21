@@ -3,9 +3,9 @@
 use crate::{
     BResult,
     prelude::{
-        init_raw, BEvent, CharacterTranslationMode, Console, FlexiConsole, Font, FontCharType,
-        GameState, InitHints, Radians, RenderSprite, Shader, SimpleConsole, SpriteConsole,
-        SpriteSheet, TextAlign, VirtualKeyCode, BACKEND, INPUT,
+        BACKEND, BEvent, CharacterTranslationMode, Console, FlexiConsole, Font, FontCharType,
+        GameState, INPUT, InitHints, Radians, RenderSprite, Shader, SimpleConsole, SpriteConsole,
+        SpriteSheet, TextAlign, VirtualKeyCode, init_raw,
     },
 };
 use bracket_color::prelude::RGBA;
